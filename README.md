@@ -1,6 +1,6 @@
-# command-palette
+# slash-command
 
-An implementation of an IDE's cmd-p or ctrl-p action.
+A React-based command palette from a text field.
 
 ## Author
 

@@ -1,7 +1,7 @@
 {
-  "name": "command-palette",
+  "name": "slash-command",
   "version": "0.1.0",
-  "description": "An implementation of an IDE's cmd-p or ctrl-p action.",
+  "description": "A React-based command palette from a text field.",
   "author": "David Valles <davidtjvalles@gmail.com> (https://dtjv.io/)",
   "license": "MIT",
   "private": true,
