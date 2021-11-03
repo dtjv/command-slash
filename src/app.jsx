@@ -31,11 +31,8 @@ export const App = () => {
 
   const commands = [insertDog, sayHi, deleteText]
 
-  const handleChangeSelected = (event) => {
-    event.preventDefault()
-
+  const changeSelectedId = (offset) => {
     const selectedIdx = items.findIndex((item) => item.id === selectedId)
-    const offset = event.key === 'ArrowDown' ? 1 : -1
 
     if (selectedIdx !== -1) {
       let nextIdx = selectedIdx + offset
@@ -46,10 +43,13 @@ export const App = () => {
     }
   }
 
-  const handleRunCommand = () => {
+  const runSelectedCommand = () => {
     const selectedIdx = items.findIndex((item) => item.id === selectedId)
+
     if (selectedIdx !== -1) {
       commands[selectedIdx]()
+
+      setSelectedId(items[0].id)
       toggleMenu()
     }
   }
@@ -59,12 +59,13 @@ export const App = () => {
       case 'ArrowUp':
       case 'ArrowDown':
         if (showMenu) {
-          handleChangeSelected(event)
+          event.preventDefault()
+          changeSelectedId(event.key === 'ArrowDown' ? 1 : -1)
         }
         break
       case 'Enter':
         if (showMenu) {
-          handleRunCommand()
+          runSelectedCommand()
         }
         break
       case '/':
@@ -78,15 +79,6 @@ export const App = () => {
       default:
       //noop
     }
-  }
-
-  const handleTextChange = (e) => {
-    const inputText = e.currentTarget.value
-    setText(inputText)
-  }
-
-  const handleMouseOver = (id) => {
-    setSelectedId(id)
   }
 
   useEffect(() => {
@@ -105,7 +97,7 @@ export const App = () => {
           <input
             type="text"
             value={text}
-            onChange={handleTextChange}
+            onChange={(e) => setText(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
             style={{ padding: '.5rem', border: '1px solid black' }}
           />
@@ -134,8 +126,8 @@ export const App = () => {
                         ? { backgroundColor: 'lightblue' }
                         : { backgroundColor: '#eee' }),
                     }}
-                    onMouseOver={() => handleMouseOver(item.id)}
-                    onClick={handleRunCommand}
+                    onMouseOver={() => setSelectedId(item.id)}
+                    onClick={runSelectedCommand}
                   >
                     {item.display}
                   </li>
