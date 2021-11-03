@@ -6,6 +6,7 @@ const useToggle = (initialValue = false) => {
   return [state, toggle, setState]
 }
 
+// TODO: how to attach commands to these 'items' (needs a better name!)
 const items = [
   { id: 'A', display: 'Insert 🐕' },
   { id: 'B', display: 'Say Hi' },
@@ -14,9 +15,15 @@ const items = [
 
 export const App = () => {
   const [text, setText] = useState('')
-  const [showMenu, toggleMenu, setShowMenu] = useToggle(false)
   const [selectedId, setSelectedId] = useState('A')
+  const [queryStartIdx, setQueryStartIdx] = useState(0)
+  const [runCommand, toggleRunCommand] = useToggle(false)
+  const [showMenu, toggleShowMenu, setShowMenu] = useToggle(false)
+  const filteredItems = items.filter((item) =>
+    item.display.startsWith(text.substring(queryStartIdx))
+  )
 
+  // TODO: how to abstract these command functions, so i can easily add more?
   const insertDog = () => {
     setText((text) => `${text} 🐕`)
   }
@@ -46,11 +53,30 @@ export const App = () => {
   const runSelectedCommand = () => {
     const selectedIdx = items.findIndex((item) => item.id === selectedId)
 
+    // TODO:
+    // 1. what if `selectedIdx` is out of bounds for `command`?
     if (selectedIdx !== -1) {
       commands[selectedIdx]()
+    }
+  }
 
-      setSelectedId(items[0].id)
-      toggleMenu()
+  const handleTextChange = (e) => {
+    const inputText = e.currentTarget.value
+
+    setText(inputText)
+
+    // In 'command-mode', adjust query start position when user hits BACKSPACE.
+    if (showMenu && inputText.length < queryStartIdx) {
+      setQueryStartIdx(inputText.length)
+    }
+  }
+
+  const queueRunCommand = () => {
+    if (showMenu) {
+      // Clear 'command-mode' query text from input field.
+      setText((v) => v.substring(0, queryStartIdx))
+      // Set 'queue' to run a command. Then, rely on useEffect to run command.
+      toggleRunCommand()
     }
   }
 
@@ -59,18 +85,18 @@ export const App = () => {
       case 'ArrowUp':
       case 'ArrowDown':
         if (showMenu) {
+          // Prevent arrow keys from repositioning cursor in input field.
           event.preventDefault()
           changeSelectedId(event.key === 'ArrowDown' ? 1 : -1)
         }
         break
       case 'Enter':
-        if (showMenu) {
-          runSelectedCommand()
-        }
+        queueRunCommand()
         break
       case '/':
         if (event.metaKey) {
-          toggleMenu()
+          toggleShowMenu()
+          setQueryStartIdx(text.length)
         }
         break
       case 'Escape':
@@ -81,25 +107,75 @@ export const App = () => {
     }
   }
 
+  // In 'command-mode', select first command in list as 'text' changes.
   useEffect(() => {
-    if (text === '') {
-      setShowMenu(false)
-      setSelectedId(items[0].id)
+    if (showMenu && filteredItems.length) {
+      setSelectedId(filteredItems[0].id)
     }
   }, [text])
+
+  // Reset these state values when not in 'command-mode'.
+  useEffect(() => {
+    if (!showMenu) {
+      setQueryStartIdx(0)
+      setSelectedId(items[0].id)
+    }
+  }, [showMenu])
+
+  // In 'command-mode', run command in 'queue'. Then, reset 'queue' & hide menu.
+  useEffect(() => {
+    if (showMenu && runCommand) {
+      runSelectedCommand()
+      toggleShowMenu()
+      toggleRunCommand()
+    }
+  }, [runCommand])
 
   return (
     <div style={{ margin: '0 auto' }}>
       <div
         style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}
       >
-        <div>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '2rem',
+          }}
+        >
+          <div
+            style={{
+              marginBottom: '.5rem',
+              color: 'grey',
+              fontStyle: 'italic',
+              fontSize: '80%',
+            }}
+          >
+            <span>(Use </span>
+            <span
+              style={{
+                padding: '2px 3px',
+                marginLeft: '2px',
+                marginRight: '2px',
+                border: '1px solid grey',
+                borderRadius: '.25rem',
+              }}
+            >
+              <kbd>⌘</kbd>
+              <kbd>/</kbd>
+            </span>
+            <span>to toggle command palette) </span>
+          </div>
           <input
             type="text"
             value={text}
-            onChange={(e) => setText(e.currentTarget.value)}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
-            style={{ padding: '.5rem', border: '1px solid black' }}
+            style={{
+              padding: '.5rem',
+              border: '1px solid black',
+              borderRadius: '.25rem',
+            }}
           />
           {showMenu && (
             <div
@@ -108,31 +184,37 @@ export const App = () => {
                 padding: '.5rem',
               }}
             >
-              <ul role="listbox" aria-activedescendant={selectedId}>
-                {items.map((item) => (
-                  <li
-                    key={item.id}
-                    id={item.id}
-                    role="option"
-                    aria-selected={selectedId === item.id}
-                    style={{
-                      ...{
-                        cursor: 'pointer',
-                        margin: '.5rem',
-                        padding: '.5rem',
-                        backgroundColor: '#eee',
-                      },
-                      ...(selectedId === item.id
-                        ? { backgroundColor: 'lightblue' }
-                        : { backgroundColor: '#eee' }),
-                    }}
-                    onMouseOver={() => setSelectedId(item.id)}
-                    onClick={runSelectedCommand}
-                  >
-                    {item.display}
-                  </li>
-                ))}
-              </ul>
+              {filteredItems.length ? (
+                <ul role="listbox" aria-activedescendant={selectedId}>
+                  {filteredItems.map((item) => (
+                    <li
+                      key={item.id}
+                      id={item.id}
+                      role="option"
+                      aria-selected={selectedId === item.id}
+                      style={{
+                        ...{
+                          cursor: 'pointer',
+                          margin: '.5rem',
+                          padding: '.5rem',
+                          backgroundColor: '#eee',
+                        },
+                        ...(selectedId === item.id
+                          ? { backgroundColor: 'lightblue' }
+                          : { backgroundColor: '#eee' }),
+                      }}
+                      onMouseOver={() => setSelectedId(item.id)}
+                      onClick={queueRunCommand}
+                    >
+                      {item.display}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ color: 'grey', fontStyle: 'italic' }}>
+                  No matches found
+                </div>
+              )}
             </div>
           )}
         </div>
