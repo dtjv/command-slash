@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-const DEFAULT_ITEMS = [
+const useToggle = (initialValue = false) => {
+  const [state, setState] = useState(initialValue)
+  const toggle = useCallback(() => setState((v) => !v), [])
+  return [state, toggle, setState]
+}
+
+const items = [
   { id: 'A', display: 'Insert 🐕' },
   { id: 'B', display: 'Say Hi' },
   { id: 'C', display: 'Delete Text' },
@@ -8,8 +14,7 @@ const DEFAULT_ITEMS = [
 
 export const App = () => {
   const [text, setText] = useState('')
-  const [items, setItems] = useState(DEFAULT_ITEMS)
-  const [showMenu, setShowMenu] = useState(false)
+  const [showMenu, toggleMenu, setShowMenu] = useToggle(false)
   const [selectedId, setSelectedId] = useState('A')
 
   const insertDog = () => {
@@ -41,6 +46,14 @@ export const App = () => {
     }
   }
 
+  const handleRunCommand = () => {
+    const selectedIdx = items.findIndex((item) => item.id === selectedId)
+    if (selectedIdx !== -1) {
+      commands[selectedIdx]()
+      toggleMenu()
+    }
+  }
+
   const handleKeyDown = (event) => {
     switch (event.key) {
       case 'ArrowUp':
@@ -51,33 +64,37 @@ export const App = () => {
         break
       case 'Enter':
         if (showMenu) {
-          const selectedIdx = items.findIndex((item) => item.id === selectedId)
-          if (selectedIdx !== -1) {
-            setText((text) => text.substring(0, text.length - 1))
-            commands[selectedIdx]()
-            setShowMenu(false)
-          }
+          handleRunCommand()
         }
         break
       case '/':
-        setShowMenu(true)
+        if (event.metaKey) {
+          toggleMenu()
+        }
+        break
+      case 'Escape':
+        setShowMenu(false)
+        break
       default:
-      // noop
+      //noop
     }
   }
 
-  const handleChange = (e) => {
-    const inputValue = e.currentTarget.value
-    setText(inputValue)
-
-    if (inputValue === '') {
-      setSelectedId(0)
-    }
+  const handleTextChange = (e) => {
+    const inputText = e.currentTarget.value
+    setText(inputText)
   }
 
   const handleMouseOver = (id) => {
     setSelectedId(id)
   }
+
+  useEffect(() => {
+    if (text === '') {
+      setShowMenu(false)
+      setSelectedId(items[0].id)
+    }
+  }, [text])
 
   return (
     <div style={{ margin: '0 auto' }}>
@@ -88,7 +105,7 @@ export const App = () => {
           <input
             type="text"
             value={text}
-            onChange={handleChange}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             style={{ padding: '.5rem', border: '1px solid black' }}
           />
@@ -118,6 +135,7 @@ export const App = () => {
                         : { backgroundColor: '#eee' }),
                     }}
                     onMouseOver={() => handleMouseOver(item.id)}
+                    onClick={handleRunCommand}
                   >
                     {item.display}
                   </li>
