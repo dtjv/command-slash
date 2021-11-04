@@ -1,42 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useToggle } from './use-toggle'
 
-const useToggle = (initialValue = false) => {
-  const [state, setState] = useState(initialValue)
-  const toggle = useCallback(() => setState((v) => !v), [])
-  return [state, toggle, setState]
-}
-
-// TODO: how to attach commands to these 'items' (needs a better name!)
-const items = [
-  { id: 'A', display: 'Insert 🐕' },
-  { id: 'B', display: 'Say Hi' },
-  { id: 'C', display: 'Delete Text' },
-]
-
-export const App = () => {
+export const App = ({ items }) => {
   const [text, setText] = useState('')
-  const [selectedId, setSelectedId] = useState('A')
+  const [selectedId, setSelectedId] = useState(items[0].id)
   const [queryStartIdx, setQueryStartIdx] = useState(0)
   const [runCommand, toggleRunCommand] = useToggle(false)
   const [showMenu, toggleShowMenu, setShowMenu] = useToggle(false)
   const filteredItems = items.filter((item) =>
     item.display.startsWith(text.substring(queryStartIdx))
   )
-
-  // TODO: how to abstract these command functions, so i can easily add more?
-  const insertDog = () => {
-    setText((text) => `${text} 🐕`)
-  }
-
-  const deleteText = () => {
-    setText('')
-  }
-
-  const sayHi = () => {
-    alert('hi!')
-  }
-
-  const commands = [insertDog, sayHi, deleteText]
 
   const changeSelectedId = (offset) => {
     const selectedIdx = items.findIndex((item) => item.id === selectedId)
@@ -51,12 +24,10 @@ export const App = () => {
   }
 
   const runSelectedCommand = () => {
-    const selectedIdx = items.findIndex((item) => item.id === selectedId)
+    const selectedItem = items.find((item) => item.id === selectedId)
 
-    // TODO:
-    // 1. what if `selectedIdx` is out of bounds for `command`?
-    if (selectedIdx !== -1) {
-      commands[selectedIdx]()
+    if (selectedItem) {
+      selectedItem.command(setText)
     }
   }
 
