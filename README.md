@@ -1,10 +1,12 @@
 # Command Slash <kbd>⌘</kbd><kbd>/</kbd>
 
-A React-based command palette from within a text field.
+A super simple React-based command palette from within a text field.
+
+> This project is for demonstration purposes only.
+
+### [View demo](https://dtjv.io/command-slash)
 
 ## About
-
-> This project is based off a technical interview. A fun challenge. 🤓
 
 This demo displays a text field in which users can freely type. The following
 featues are available while the text field has focus.
