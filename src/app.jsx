@@ -1,31 +1,35 @@
 import { useRef, useState, useEffect } from 'react'
 import { useToggle } from './use-toggle'
 
-export const App = ({ items }) => {
+// Notes:
+// 1. 'command mode' references the app state when the command menu is showing.
+export const App = ({ commands }) => {
   const inputRef = useRef()
   const [text, setText] = useState('')
-  const [selectedId, setSelectedId] = useState(items[0].id)
+  const [selectedId, setSelectedId] = useState(commands[0].id)
   const [queryStartIdx, setQueryStartIdx] = useState(0)
   const [runCommand, toggleRunCommand] = useToggle(false)
   const [showMenu, toggleShowMenu, setShowMenu] = useToggle(false)
-  const filteredItems = items.filter((item) =>
-    item.display.startsWith(text.substring(queryStartIdx))
+  const filteredCommands = commands.filter((command) =>
+    command.display.startsWith(text.substring(queryStartIdx))
   )
 
   const changeSelectedId = (offset) => {
-    const selectedIdx = items.findIndex((item) => item.id === selectedId)
+    const selectedIdx = commands.findIndex(
+      (command) => command.id === selectedId
+    )
 
     if (selectedIdx !== -1) {
       let nextIdx = selectedIdx + offset
       nextIdx =
-        nextIdx < 0 ? 0 : nextIdx === items.length ? nextIdx - 1 : nextIdx
+        nextIdx < 0 ? 0 : nextIdx === commands.length ? nextIdx - 1 : nextIdx
 
-      setSelectedId(items[nextIdx].id)
+      setSelectedId(commands[nextIdx].id)
     }
   }
 
   const runSelectedCommand = () => {
-    const selectedItem = items.find((item) => item.id === selectedId)
+    const selectedItem = commands.find((command) => command.id === selectedId)
 
     if (selectedItem) {
       selectedItem.command(setText)
@@ -33,23 +37,23 @@ export const App = ({ items }) => {
     }
   }
 
-  const handleTextChange = (e) => {
-    const inputText = e.currentTarget.value
-
-    setText(inputText)
-
-    // In 'command-mode', adjust query start position when user hits BACKSPACE.
-    if (showMenu && inputText.length < queryStartIdx) {
-      setQueryStartIdx(inputText.length)
-    }
-  }
-
   const queueRunCommand = () => {
     if (showMenu) {
-      // Clear 'command-mode' query text from input field.
+      // Clear 'command mode' query text from input field.
       setText((v) => v.substring(0, queryStartIdx))
       // Set 'queue' to run a command. Then, rely on useEffect to run command.
       toggleRunCommand()
+    }
+  }
+
+  const handleTextChange = (event) => {
+    const inputText = event.currentTarget.value
+
+    setText(inputText)
+
+    // In 'command mode', adjust query start position when user hits BACKSPACE.
+    if (showMenu && inputText.length < queryStartIdx) {
+      setQueryStartIdx(inputText.length)
     }
   }
 
@@ -67,6 +71,7 @@ export const App = ({ items }) => {
         queueRunCommand()
         break
       case '/':
+        // The `metaKey` is the `⌘` (cmd) key.
         if (event.metaKey) {
           toggleShowMenu()
           setQueryStartIdx(text.length)
@@ -80,22 +85,22 @@ export const App = ({ items }) => {
     }
   }
 
-  // In 'command-mode', select first command in list as 'text' changes.
+  // In 'command mode', select first command in list as 'text' changes.
   useEffect(() => {
-    if (showMenu && filteredItems.length) {
-      setSelectedId(filteredItems[0].id)
+    if (showMenu && filteredCommands.length) {
+      setSelectedId(filteredCommands[0].id)
     }
   }, [text])
 
-  // Reset these state values when not in 'command-mode'.
+  // Reset these state values when not in 'command mode'.
   useEffect(() => {
     if (!showMenu) {
       setQueryStartIdx(0)
-      setSelectedId(items[0].id)
+      setSelectedId(commands[0].id)
     }
   }, [showMenu])
 
-  // In 'command-mode', run command in 'queue'. Then, reset 'queue' & hide menu.
+  // In 'command mode', run command in 'queue'. Then, reset 'queue' & hide menu.
   useEffect(() => {
     if (showMenu && runCommand) {
       runSelectedCommand()
@@ -116,6 +121,15 @@ export const App = ({ items }) => {
             padding: '2rem',
           }}
         >
+          <h1
+            style={{
+              fontWeight: '800',
+              fontSize: '2rem',
+              marginBottom: '.5rem',
+            }}
+          >
+            Command Slash
+          </h1>
           <div
             style={{
               marginBottom: '.5rem',
@@ -159,14 +173,14 @@ export const App = ({ items }) => {
                 padding: '.5rem',
               }}
             >
-              {filteredItems.length ? (
+              {filteredCommands.length ? (
                 <ul role="listbox" aria-activedescendant={selectedId}>
-                  {filteredItems.map((item) => (
+                  {filteredCommands.map((command) => (
                     <li
-                      key={item.id}
-                      id={item.id}
+                      key={command.id}
+                      id={command.id}
                       role="option"
-                      aria-selected={selectedId === item.id}
+                      aria-selected={selectedId === command.id}
                       style={{
                         ...{
                           cursor: 'pointer',
@@ -174,14 +188,14 @@ export const App = ({ items }) => {
                           padding: '.5rem',
                           backgroundColor: '#eee',
                         },
-                        ...(selectedId === item.id
+                        ...(selectedId === command.id
                           ? { backgroundColor: 'lightblue' }
                           : { backgroundColor: '#eee' }),
                       }}
-                      onMouseOver={() => setSelectedId(item.id)}
+                      onMouseOver={() => setSelectedId(command.id)}
                       onClick={queueRunCommand}
                     >
-                      {item.display}
+                      {command.display}
                     </li>
                   ))}
                 </ul>
