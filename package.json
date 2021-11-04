@@ -1,13 +1,14 @@
 {
-  "name": "slash-command",
+  "name": "command-slash",
   "version": "0.1.0",
-  "description": "A React-based command palette from a text field.",
+  "description": "A React-based command palette from within a text field.",
   "author": "David Valles <davidtjvalles@gmail.com> (https://dtjv.io/)",
   "license": "MIT",
   "private": true,
   "source": "src/index.html",
   "scripts": {
-    "dev": "parcel"
+    "dev": "parcel",
+    "format": "prettier -w ."
   },
   "prettier": {
     "semi": false,
@@ -16,9 +17,10 @@
     "proseWrap": "always"
   },
   "devDependencies": {
-    "@types/react": "17.0.33",
-    "@types/react-dom": "17.0.10",
-    "parcel": "2.0.0"
+    "@types/react": "17.0.34",
+    "@types/react-dom": "17.0.11",
+    "parcel": "2.0.0",
+    "prettier": "2.4.1"
   },
   "dependencies": {
     "react": "17.0.2",
