@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useToggle } from './use-toggle'
 
 export const App = ({ items }) => {
+  const inputRef = useRef()
   const [text, setText] = useState('')
   const [selectedId, setSelectedId] = useState(items[0].id)
   const [queryStartIdx, setQueryStartIdx] = useState(0)
@@ -28,6 +29,7 @@ export const App = ({ items }) => {
 
     if (selectedItem) {
       selectedItem.command(setText)
+      inputRef.current.focus()
     }
   }
 
@@ -138,6 +140,7 @@ export const App = ({ items }) => {
             <span>to toggle command palette) </span>
           </div>
           <input
+            ref={inputRef}
             type="text"
             value={text}
             onChange={handleTextChange}
@@ -147,6 +150,7 @@ export const App = ({ items }) => {
               border: '1px solid black',
               borderRadius: '.25rem',
             }}
+            autoFocus
           />
           {showMenu && (
             <div
