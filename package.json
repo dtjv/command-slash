@@ -10,7 +10,7 @@
     "dev": "parcel",
     "build": "parcel build",
     "format": "prettier -w .",
-    "deploy": "yarn build && gh-pages -d dist"
+    "deploy": "yarn build --public-url=/command-slash && gh-pages -d dist"
   },
   "prettier": {
     "semi": false,
